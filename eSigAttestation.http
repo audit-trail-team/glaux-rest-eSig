@@ -1,0 +1,6 @@
+@eSigAttestation_HostAddress = http://localhost:5031
+
+GET {{eSigAttestation_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
