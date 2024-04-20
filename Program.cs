@@ -26,6 +26,7 @@ app.MapPost("/submitSignature", async (eSigEvent sigEvent) =>
         // Since we don't receive the SigType from eSignature Saturn we chose randomly between QES and QSeal
         if (string.IsNullOrEmpty(sigEvent.SigType))
         {
+            Console.WriteLine("Populating empty SigType with random value");
             eSigEvent fixedEvent = sigEvent with { SigType = new Random().Next(2).ToString() };
             sigEvent = fixedEvent;
         }
