@@ -23,6 +23,13 @@ app.MapPost("/submitSignature", async (eSigEvent sigEvent) =>
 {
     try
     {
+        // Since we don't receive the SigType from eSignature Saturn we chose randomly between QES and QSeal
+        if (string.IsNullOrEmpty(sigEvent.SigType))
+        {
+            eSigEvent fixedEvent = sigEvent with { SigType = new Random().Next(2).ToString() };
+            sigEvent = fixedEvent;
+        }
+
         string jsonData = JsonSerializer.Serialize(sigEvent);
 
         /* We pass the received JSON along to our backend. 
@@ -30,7 +37,7 @@ app.MapPost("/submitSignature", async (eSigEvent sigEvent) =>
          */
         try
         {
-            var url = "http://51.103.209.165:3001/create-audit-log";
+            var url = "http://localhost:3001/create-audit-log";
 
             var httpClient = new HttpClient();
             HttpContent httpcontent = new StringContent(jsonData, Encoding.UTF8, "application/json");
