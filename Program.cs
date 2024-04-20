@@ -22,7 +22,7 @@ app.MapPost("/submitSignature", (eSigEvent sigEvent) =>
 {
     try
     {
-        string dataDir = Environment.CurrentDirectory + Path.DirectorySeparatorChar + "data";
+        string dataDir = Environment.CurrentDirectory + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + "data" + Path.DirectorySeparatorChar + "backend" + Path.DirectorySeparatorChar + "failed";
         Directory.CreateDirectory(dataDir);
         string fileName = $"{DateTime.Now:yyMMdd-hhmmss}-{sigEvent.EvidenceUserID}-{Guid.NewGuid()}.json";
         string filePath = Path.Combine(dataDir, fileName);
