@@ -1,5 +1,12 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
+
+// For submitting signatures individually (testing)
+var URL = "http://localhost:3001/create-audit-log";
+
+// For submitting a signature allowing the backend to batch it (prod)
+// var URL = "http://localhost:3001/create-cached-audit-logs";
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +30,18 @@ app.MapPost("/submitSignature", async (eSigEvent sigEvent) =>
 {
     try
     {
+        // Try to convert timestamp to unixTime, which the smart contract uses.
+        DateTime parsedDateTime;
+        if (DateTime.TryParseExact(sigEvent.Timestamp, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedDateTime))
+        {
+            eSigEvent convertedEvent = sigEvent with { Timestamp = new DateTimeOffset(parsedDateTime).ToUnixTimeSeconds().ToString() };
+        }
+        else
+        {
+            Console.WriteLine("Invalid timestamp: " + sigEvent.Timestamp);
+            return Results.Problem("Invalid timestamp (expected yyyy-MM-dd HH:mm:ss): " + sigEvent.Timestamp);
+        }
+
         // Since we don't receive the SigType from eSignature Saturn we chose randomly between QES and QSeal
         if (string.IsNullOrEmpty(sigEvent.SigType))
         {
@@ -38,18 +57,17 @@ app.MapPost("/submitSignature", async (eSigEvent sigEvent) =>
          */
         try
         {
-            var url = "http://localhost:3001/create-audit-log";
-
             var httpClient = new HttpClient();
             HttpContent httpcontent = new StringContent(jsonData, Encoding.UTF8, "application/json");
-            var response = await httpClient.PostAsync(url, httpcontent);
+            var response = await httpClient.PostAsync(URL, httpcontent);
             response.EnsureSuccessStatusCode();
             Console.WriteLine($"Passed request for user {sigEvent.EvidenceUserID} to the backend");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to pass request for user {sigEvent.EvidenceUserID} to backend: {ex.Message}");
-            string dataDir = Path.Combine(Environment.GetEnvironmentVariable("HOME"), "data", "backend", "failed");
+            string baseDir = Environment.GetEnvironmentVariable("HOME") ?? "/tmp";
+            string dataDir = Path.Combine(baseDir, "data", "backend", "failed");
             Directory.CreateDirectory(dataDir);
             string fileName = $"{DateTime.Now:yyMMdd-hhmmss}-{sigEvent.EvidenceUserID}-{Guid.NewGuid()}.json";
             string filePath = Path.Combine(dataDir, fileName);
