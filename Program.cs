@@ -34,7 +34,7 @@ app.MapPost("/submitSignature", async (eSigEvent sigEvent) =>
         DateTime parsedDateTime;
         if (DateTime.TryParseExact(sigEvent.Timestamp, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedDateTime))
         {
-            eSigEvent convertedEvent = sigEvent with { Timestamp = new DateTimeOffset(parsedDateTime).ToUnixTimeSeconds().ToString() };
+            sigEvent = sigEvent with { Timestamp = new DateTimeOffset(parsedDateTime).ToUnixTimeSeconds().ToString() };
         }
         else
         {
